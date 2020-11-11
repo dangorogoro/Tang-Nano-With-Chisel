@@ -6,60 +6,59 @@ import chisel3.util._
 
 class VGAModule extends Module {
   val io = IO(new Bundle {
-    val lcd_b = Output(UInt(4.W))
-    val lcd_g = Output(UInt(5.W))
-    val lcd_r = Output(UInt(4.W))
-    val lcd_de = Output(Bool())
-    val lcd_hsync = Output(Bool())
-    val lcd_vsync = Output(Bool())
-    val lcd_pixel_clk = Input(Bool())
+    val x = Output(UInt(16.W))
+    val y = Output(UInt(16.W))
+    val vga_de = Output(Bool())
+    val vga_hsync = Output(Bool())
+    val vga_vsync = Output(Bool())
+    val debug = Output(Bool())
+    val debug_x = Output(UInt(16.W))
+    val debug_y = Output(UInt(16.W))
   })
 
-  val column_count = RegInit(0.U(16.W))
-  val row_count = RegInit(0.U(16.W))
+  val x_count = RegInit(0.U(16.W))
+  val y_count = RegInit(0.U(16.W))
 
-  val column_pulse = 1
-  val row_pulse = 5
+  val y_back_porch = 6
+  val y_front_porch = 62
+  val y_sync = 5
 
-  val column_back_porch = 182
-  val column_front_porch = 210
-  val row_back_porch = 0
-  val row_front_porch = 45
-  val max_column = 800 + column_front_porch + column_back_porch
-  val max_row = 480 + row_front_porch + row_back_porch
+  val x_back_porch = 182
+  val x_front_porch = 210
+  val x_sync = 1
 
-  when(column_count === max_column.U){
-    row_count := row_count + 1.U
-    column_count := 0.U
+  val max_x = 800 + x_front_porch + x_back_porch
+  val max_y = 480 + y_front_porch + y_back_porch
+
+  when(x_count >= max_x.U){
+    y_count := y_count + 1.U
+    x_count := 0.U
   }.otherwise{
-    when(row_count === max_row.U){
-      row_count := 0.U
-      column_count := 0.U
+    when(y_count >= max_y.U){
+      y_count := 0.U
+      x_count := 0.U
     }.otherwise{
-      column_count := column_count + 1.U
+      x_count := x_count + 1.U
     }
   }
-  io.lcd_hsync := Mux(column_count >= column_pulse.U && column_count <= (max_column - column_front_porch).U, 0.U, 1.U)
-  io.lcd_vsync := Mux(row_count >= row_pulse.U && row_count <= (max_row - row_front_porch).U, 0.U, 1.U)
-  io.lcd_de := Mux(
-    column_count >= column_back_porch.U &&
-    column_count <= (max_column - column_front_porch).U &&
-    row_count >= row_back_porch.U &&
-    row_count <= (max_row - row_front_porch - 1).U,
+  io.vga_vsync := Mux((y_count >= y_sync.U) && (y_count <= (max_y).U), 0.U, 1.U)
+  io.vga_hsync := Mux((x_count >= x_sync.U) && (x_count <= (max_x - x_front_porch).U), 0.U, 1.U)
+  io.vga_de := Mux(
+    (x_count >= x_back_porch.U) &&
+    (x_count <= (max_x - x_front_porch).U) &&
+    (y_count >= y_back_porch.U) &&
+    (y_count <= (max_y - y_front_porch - 1).U),
     1.U, 0.U)
-  when(column_count < 200.U){
-    io.lcd_b := 1.U
-  }.otherwise{
-    io.lcd_b := 8.U
+  io.x := Mux(x_count >= x_back_porch.U, x_count - x_back_porch.U, 0.U)
+  io.y := Mux(y_count >= y_back_porch.U, y_count - y_back_porch.U, 0.U)
+
+  val count = Counter(33 * 1000 * 1000 / 2)
+  count.inc()
+  val debug_val = RegInit(0.U(1.W))
+  when(count.value === 0.U){
+    debug_val := !debug_val
   }
-  when(column_count < 400.U){
-    io.lcd_g := 1.U
-  }.otherwise{
-    io.lcd_g := 8.U
-  }
-  when(column_count < 600.U){
-    io.lcd_r := 1.U
-  }.otherwise{
-    io.lcd_r := 8.U
-  }
+  io.debug := debug_val
+  io.debug_x := x_count
+  io.debug_y := y_count
 }
