@@ -5,7 +5,7 @@ package led
 import chisel3.iotesters
 import chisel3.iotesters.{ChiselFlatSpec, Driver, PeekPokeTester}
 
-class LEDTester(c: LED) extends PeekPokeTester(c) {
+class LEDTester(c: LEDTop) extends PeekPokeTester(c) {
   private val led = c
   var cnt = 0
   for(i <- 1 to 10 by 1) {
@@ -15,7 +15,7 @@ class LEDTester(c: LED) extends PeekPokeTester(c) {
   }
 }
 object LEDTest extends App {
-  iotesters.Driver.execute(args, () => new LED) {
+  iotesters.Driver.execute(args, () => new LEDTop(2)) {
     c => new LEDTester(c)
   }
 }
