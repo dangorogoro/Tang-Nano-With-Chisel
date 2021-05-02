@@ -10,7 +10,7 @@ ChiselでTang Nanoの開発を行う.
 
 Lチカを行ったり, ゲーミングLEDみたいな光らせ方をする.
 
-![led](fig/images.jpeg)
+![led](https://github.com/dangorogoro/Tang-Nano-With-Chisel/blob/main/fig/image.jpg)
 
 > src/main/scala/lcd/
 
@@ -20,4 +20,4 @@ LCDのためのクロック生成はこちらのリポジトリのコードのve
 
 https://github.com/dotcypress/tang-nano-lcd
 
-![led](fig/lcd.jpeg)
+![lcd](https://github.com/dangorogoro/Tang-Nano-With-Chisel/blob/main/fig/lcd.jpg)
