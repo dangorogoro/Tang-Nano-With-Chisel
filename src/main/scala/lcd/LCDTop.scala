@@ -153,8 +153,9 @@ class LCDTopWrapper extends RawModule {
   pll_box.io.clkin := io.xtal
   val top = withClockAndReset(pll_box.io.clkout.asClock, !io.nrst){ Module(new LCDTop) }//200MHz
   top.io.vga_clk := pll_box.io.clkoutd //33.333M
-  top.io.vga_nrst := io.vga_nrst
   io.vga_clk := pll_box.io.clkoutd
+ 
+  top.io.vga_nrst := io.vga_nrst
   io.vga_b := top.io.vga_b
   io.vga_g := top.io.vga_g
   io.vga_r := top.io.vga_r
