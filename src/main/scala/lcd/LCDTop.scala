@@ -21,9 +21,6 @@ class LCDTop extends Module {
   })
   val x = RegInit(0.U(16.W))
   val y = RegInit(0.U(16.W))
-  val index_x = RegInit(0.U(8.W))
-  val index_y = RegInit(0.U(8.W))
-  val pixel_val = RegInit(0.U(16.W))
   val count_sec = Counter(200 * 1000 * 1000)
   val led_r_val = RegInit(1.U(1.W))
   val led_g_val = RegInit(1.U(1.W))
@@ -32,7 +29,6 @@ class LCDTop extends Module {
   val vga_g_val = RegInit(0.U(6.W))
   val vga_b_val = RegInit(0.U(5.W))
   val vga_module = withClockAndReset(io.vga_clk.asClock, !io.vga_nrst){ Module(new VGAModule) }
-  val mem_module = withClockAndReset(io.vga_clk.asClock, !io.vga_nrst){ Module(new PictureMem) }
   
   x := vga_module.io.x
   y := vga_module.io.y
@@ -40,36 +36,10 @@ class LCDTop extends Module {
   io.vga_hsync := vga_module.io.vga_hsync
   io.vga_vsync := vga_module.io.vga_vsync
 
-  pixel_val := mem_module.io.data
-  mem_module.io.x := index_x
-  mem_module.io.y := index_y
 
   val width = 800
   val height = 480
 
-  val pic_x = 160
-  val pic_y = 160
-  val start_x = width / 2 - pic_x / 2
-  val end_x = width / 2 + pic_x / 2 - 1
-  val start_y = height / 2 - pic_y / 2
-  val end_y = height / 2 + pic_y / 2 - 1
-  
-
-  when(x >= start_x.U && x <= end_x.U && y >= start_y.U && y <= end_y.U){
-    index_x := x - start_x.U
-    index_y := y - start_y.U
-    
-    vga_r_val := (pixel_val >> 11.U) & 31.U
-    vga_g_val := (pixel_val >> 5.U) & 63.U
-    vga_b_val := (pixel_val >> 0.U) & 31.U
-  }.otherwise{
-    index_x := 0.U
-    index_y := 0.U    
-    vga_r_val := 0.U
-    vga_g_val := 0.U
-    vga_b_val := 0.U
-  }
-  /*
   val x_grid = 8
   val y_grid = 4
   val x_cell_size = width / x_grid
@@ -144,7 +114,6 @@ class LCDTop extends Module {
       vga_b_val := 31.U
     }
   }
-  */
   count_sec.inc()
   when(count_sec.value === 0.U){
     led_r_val := !led_r_val
